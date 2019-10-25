@@ -53,10 +53,27 @@ func (c *Client) EditPullRequest(owner, repo string, index int64, opt structs.Ed
 		jsonHeader, bytes.NewReader(body), pr)
 }
 
+// MergePullRequestOption options when merging a pull request
+type MergePullRequestOption struct {
+	// required: true
+	// enum: merge,rebase,rebase-merge,squash
+	Do                string `json:"Do" binding:"Required"`
+	MergeTitleField   string `json:"MergeTitleField"`
+	MergeMessageField string `json:"MergeMessageField"`
+}
+// MergePullRequestResponse response when merging a pull request
+type MergePullRequestResponse struct {
+}
+
 // MergePullRequest merge a PR to repository by PR id
-func (c *Client) MergePullRequest(owner, repo string, index int64) error {
-	_, err := c.getResponse("POST", fmt.Sprintf("/repos/%s/%s/pulls/%d/merge", owner, repo, index), nil, nil)
-	return err
+func (c *Client) MergePullRequest(owner, repo string, index int64, opt MergePullRequestOption) (*MergePullRequestResponse, error) {
+	body, err := json.Marshal(&opt)
+	if err != nil {
+		return nil, err
+	}
+	response := new(MergePullRequestResponse)
+	return response, c.getParsedResponse("POST", fmt.Sprintf("/repos/%s/%s/pulls/%d/merge", owner, repo, index),
+		jsonHeader, bytes.NewReader(body), response)
 }
 
 // IsPullRequestMerged test if one PR is merged to one repository
